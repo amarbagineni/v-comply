@@ -1,0 +1,27 @@
+
+.user-approval-list {
+    margin: 20px;
+    .alert {
+        padding: 5px 10px;
+        width: 60%;
+        background-color: #ddd;
+    }
+    
+    .user-action {
+        display: flex;
+        align-items: center;
+
+        .approval-text {
+
+        }
+
+        .approval-options {
+            margin-left: auto;
+            
+            button {
+                margin-left: 10px;
+            }
+        }
+    }
+    
+}

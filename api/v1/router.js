@@ -2,6 +2,7 @@ const express = require('express');
 const user = require('./user/user');
 const workflow = require('./workflow/workflow');
 const vendors = require('./vendor/vendor');
+const actions = require('./action/action');
 
 const router = express.Router();
 
@@ -26,5 +27,12 @@ router.get('/workflow/fetch/:name', workflow.fetchByName);
 router.post('/vendors/add', vendors.add);
 router.get('/vendors/fetch/:status', vendors.fetchByStatus);
 router.get('/vendors/fetch', vendors.fetchAll);
+
+
+/**
+ * GET v1/vendors
+ */
+router.post('/action/update', actions.update);
+router.get('/action/fetch/:user', actions.fetchByUser);
 
 module.exports = router;

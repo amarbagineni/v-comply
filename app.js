@@ -110,11 +110,12 @@ const Vendors = (vendorCollection) => {
             // check if the approval chain type is sequential
             const vendorId = payload.id;
             const activeLevel = 1;
+            const operation = payload.operation;
             const levelType = payload.approvals[0]['type'];
             if (payload.approvals[0]['type'] === "sequential") {
                 // Insert and entry into the approval actions table as pending action
                 const userId = payload.approvals[0]['users'][0]['id'];
-                actions.addAction(userId, vendorId, activeLevel, levelType).then((resp) => {
+                actions.addAction(userId, vendorId, activeLevel, levelType, operation).then((resp) => {
                     resolve(response);
                 });
             } else {
@@ -156,22 +157,40 @@ const Actions = (actionCollection) => {
 
     this.actions = actionCollection;
 
-    const addAction = (userId, vendorId, activeLevel, levelType) => {
+    const addAction = (userId, vendorId, activeLevel, levelType, operation) => {
         const id = `${vendorId}${userId}${activeLevel}-${Date.now()}`;
         const status = 'pending';
         return new Promise((resolve, reject) => {
             // add the pending actions to the payload based on the response
-            const response = this.actions.add({id, userId, vendorId, activeLevel, levelType, status});
+            const response = this.actions.add({id, userId, vendorId, activeLevel, levelType, operation, status});
             resolve(response);
         });
     }
 
     const getPendingActionsByUser = (userId) => {
+    console.log(userId, ' AT the END')
 
+        return new Promise((resolve, reject) => {
+            this.actions.where('status', '==', 'pending').where('userId', '==', Number(userId)).get().then(snapshot => {
+                const docs = [];
+                console.log(snapshot.docs.length, ' IS the length');
+                snapshot.docs.forEach(doc => {
+                    console.log('Loading up the ', doc.id);
+                    docs.push({action: doc.data(), id: doc.id});
+                })
+                resolve(docs);
+            });
+        });
     }
 
-    const setActionStatus = (userId, vendorId, activeLevel, status) => {
-
+    const setActionStatus = (id, status) => {
+        return new Promise((resolve, reject) => {
+            this.actions.doc(id).update({
+                status: status
+            }).then(() => {
+                resolve(true)
+            });
+        });
     }
 
     return {
