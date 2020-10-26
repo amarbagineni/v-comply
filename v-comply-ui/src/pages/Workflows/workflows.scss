@@ -1,0 +1,93 @@
+.workflow-form {
+    padding: 20px;
+    .workflow-type {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        .label {
+            margin-right: 10px;
+        }
+    }
+
+    .users {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+
+        .user-dropdown {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            .label {
+                margin-right: 10px;
+            }
+        }
+        
+        .list-group {
+            flex-direction: row;
+        }
+
+        .user-list-item {
+            display: flex;
+            .name {
+                margin-right: 20px;
+            }
+
+            .user-remove {
+                color: white;
+                background-color: red;
+                width: auto;
+                border-radius: 50%;
+                text-align: center;
+                width: 30px;
+                cursor: pointer;
+            }
+        }
+
+    }
+
+    .button-panel {
+        float: right;
+    }
+
+    .table {
+        .actions-col {
+            display: flex;
+            align-items: center;
+        }
+    }
+}
+
+
+.schema-container {
+
+    .schema {
+        padding: 20px 40px;
+
+        .name-bar {
+            width: 100%;
+            display: flex;
+            .schema-name {
+                color: grey;
+            }
+
+            .remove-schema {
+                margin-left: auto;
+            }
+        }
+        
+
+        .list-group {
+            .list-group-item {
+                display: flex;
+
+                .level-name {
+                    font-weight: bold;
+                    margin-right: 20px;
+                }
+            }
+        }
+    }
+
+}

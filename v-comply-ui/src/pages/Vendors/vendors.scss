@@ -1,0 +1,61 @@
+.add-vendor-form {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px 40px;
+    margin: auto;
+    .vendor-name {
+        width: 40%;
+        margin-right: 20px;
+    }
+
+    .dropdown {
+        margin-right: 20px;
+    }
+}
+
+.vendors {
+    .list-group {
+        .alert {
+            display: flex;
+            margin-bottom: 2px;
+            padding: 5px 20px;
+            .level-name {
+                font-weight: bold;
+                margin-right: 20px;
+            }
+
+            .users-list {
+                display: flex;
+
+                .user-item {
+                    display: flex;
+                    .level-symbol {
+                        text-align: center;
+                        width: 40px;
+                    }
+                }
+
+                .user {
+                    padding: 2px 15px;
+                    width: 150px;
+                    overflow: hidden;
+                    &.success {
+                        background-color: #9bf2a9;
+                        color: #1d6028;
+                    }
+
+                    &.pending {
+                        background-color: grey;
+                        color: white;
+                    }
+
+                    &.failed {
+                        background-color: #f29b9b;
+                        color: #a31b1b;
+                    }
+                }
+            }
+        }
+    }
+}
