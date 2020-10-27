@@ -209,6 +209,27 @@ const Vendors = (vendorCollection) => {
                     approvals,
                     activeLevel: updatedActiveLevel,
                 });
+                
+                if(updatedActiveLevel > action.activeLevel) {
+                    const updatedLevel = approvals[updatedActiveLevel - 1];
+                    if (updatedLevel['type'] === "sequential") {
+                        // Insert and entry into the approval actions table as pending action
+                        const userId = updatedLevel['users'][0]['id'];
+                        actions.addAction(userId, action.vendorId, updatedActiveLevel, updatedLevel.levelType, action.operation).then((resp) => {
+                            return true;
+                        });
+                    } else {
+                        console.log(updatedLevel, ' just to look');
+                        // insert all user's pending actions into pending table
+                        const allUpdates = updatedLevel['users'].map(user => {
+                            console.log(user.id, action.vendorId, updatedActiveLevel, updatedLevel.type, action.operation, ' ALL PARAMS ');
+                            return actions.addAction(user.id, action.vendorId, updatedActiveLevel, updatedLevel.type, action.operation);
+                        });
+                        Promise.all(allUpdates).then(() => {
+                            return true;
+                        })
+                    }
+                }
             });
         });
     }
