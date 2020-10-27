@@ -215,7 +215,7 @@ const Vendors = (vendorCollection) => {
                     if (updatedLevel['type'] === "sequential") {
                         // Insert and entry into the approval actions table as pending action
                         const userId = updatedLevel['users'][0]['id'];
-                        actions.addAction(userId, action.vendorId, updatedActiveLevel, updatedLevel.levelType, action.operation).then((resp) => {
+                        actions.addAction(userId, action.vendorId, updatedActiveLevel, updatedLevel.type, action.operation).then((resp) => {
                             return true;
                         });
                     } else {
