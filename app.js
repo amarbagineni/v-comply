@@ -140,11 +140,86 @@ const Vendors = (vendorCollection) => {
         });
     } 
 
+    const terminateApproval = (action) => {
+        this.vendors.where('id', '==', action.vendorId).get().then(snapshot => {
+            snapshot.docs.forEach(doc => {
+                // find the level and make it's approval as false
+                const activeLevel = doc.data().activeLevel;
+                const approvals = doc.data().approvals.map(approval => {
+                    if (activeLevel === approval.level) {
+                        const users = approval.users.map(user => {
+                            if(action.userId === user.id) {
+                                return {...user, hasApproved: false}
+                            }
+                            return user;
+                        });
+                        return {...approval, isLevelApproved: false, users: users};
+                    }
+                    return approval
+                });
+                // update vendor status as terminated
+                this.vendors.doc(doc.id).update({
+                    status: 'terminated',
+                    approvals,
+                });
+            });
+        });
+    }
+
+    const applySequenceTypeApproval = (action) => {
+        this.vendors.where('id', '==', action.vendorId).get().then(snapshot => {
+            let updatedActiveLevel = null;
+            snapshot.docs.forEach(doc => {
+                // find the level and make it's approval as false
+                const activeLevel = doc.data().activeLevel;
+                updatedActiveLevel = activeLevel;
+                let users = [];
+                const approvals = doc.data().approvals.map(approval => {
+                    if (activeLevel === approval.level) {
+                        users = approval.users.map(user => {
+                            if(action.userId === user.id) {
+                                return {...user, hasApproved: true}
+                            }
+                            //check if this was the last level 
+                            return user;
+                        });
+                        // check if the user is last in sequence
+                        if(approval.users[approval.users.length - 1]['id'] === action.userId) {
+                            // Yes the user was last in sequence 
+                            updatedActiveLevel += 1;
+                            return {...approval, isLevelApproved: true, users: users};
+                        } else {
+                            // add action for user + 1 to the pending actions
+                            let nextUserPos = null;
+                            approval.users.forEach((user, index) => {
+                                if (user.id === action.userId) {
+                                    // the next user has to be the one to have a pending action
+                                    nextUserPos = index + 1; 
+                                }
+                            });
+                            const nextUsersId = approval.users[nextUserPos]['id'];
+                            actions.addAction(nextUsersId, action.vendorId, updatedActiveLevel, action.levelType, action.operation);
+                            return {...approval, users: users};
+                        }
+                    }
+                    return approval;
+                });
+                this.vendors.doc(doc.id).update({
+                    status: (updatedActiveLevel > approvals.length) ? 'executed' : 'active',
+                    approvals,
+                    activeLevel: updatedActiveLevel,
+                });
+            });
+        });
+    }
+
     return {
         allVendors,
         add,
         vendorsByStatus,
         updateActiveLevel,
+        terminateApproval,
+        applySequenceTypeApproval,
     }
 }
 
@@ -168,12 +243,9 @@ const Actions = (actionCollection) => {
     }
 
     const getPendingActionsByUser = (userId) => {
-    console.log(userId, ' AT the END')
-
         return new Promise((resolve, reject) => {
             this.actions.where('status', '==', 'pending').where('userId', '==', Number(userId)).get().then(snapshot => {
                 const docs = [];
-                console.log(snapshot.docs.length, ' IS the length');
                 snapshot.docs.forEach(doc => {
                     console.log('Loading up the ', doc.id);
                     docs.push({action: doc.data(), id: doc.id});
@@ -183,11 +255,22 @@ const Actions = (actionCollection) => {
         });
     }
 
-    const setActionStatus = (id, status) => {
+    const setActionStatus = (id, status, action) => {
         return new Promise((resolve, reject) => {
             this.actions.doc(id).update({
                 status: status
             }).then(() => {
+                console.log('coming to then', status, id);
+                if (status === 'rejected') {
+                    vendors.terminateApproval(action);
+                } else {
+                    // THe user has approved.. 
+                    if (action.levelType === "sequential") {
+                        vendors.applySequenceTypeApproval(action);
+                    } else {
+                        // follow the non sequential flow
+                    }
+                }
                 resolve(true)
             });
         });
@@ -256,8 +339,9 @@ const WorkflowSchema = (schemasCollection) => {
     }
 }
 
+
 /**
- USAGE OF ABOVE 
+ USAGE OF ABOVE Classes
 //*/
 
 const users = Users(db.collection('user'));

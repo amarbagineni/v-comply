@@ -2,8 +2,8 @@ const { actions } = require('./../../../app');
 
 // update action
 const update = (req, res) => {
-    const {id, status} = req.body;
-    actions.setActionStatus(id, status).then((docref) => {
+    const {id, status, action} = req.body;
+    actions.setActionStatus(id, status, action).then((docref) => {
         res.send({status: "success", id: docref.id});
     });    
 }

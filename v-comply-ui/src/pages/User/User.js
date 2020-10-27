@@ -79,10 +79,10 @@ const ViewUserData = (props) => {
       });
   };
 
-  const setApprovalStatus = (id, status) => {
+  const setApprovalStatus = (id, status, action) => {
     const queries = new QueryService();
     queries
-      .runQuery(`action/update`, "POST", {id, status})
+      .runQuery(`action/update`, "POST", {id, status, action})
       .then((result) => {
         console.log(result.data);
         fetchPendingActions();
@@ -106,10 +106,10 @@ const ViewUserData = (props) => {
                 {action.operation} approval for {action.vendorId.split("_")[0]}
               </div>
               <div className="approval-options">
-                <Button variant="success" size="sm" onClick={() => setApprovalStatus(actionId, 'completed')}>
+                <Button variant="success" size="sm" onClick={() => setApprovalStatus(actionId, 'completed', action)}>
                   Approve
                 </Button>
-                <Button variant="danger" size="sm" onClick={() => setApprovalStatus(actionId, 'rejected')}>
+                <Button variant="danger" size="sm" onClick={() => setApprovalStatus(actionId, 'rejected', action)}>
                   Reject
                 </Button>
               </div>
