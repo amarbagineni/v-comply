@@ -24,6 +24,6 @@ app.use('/*', (req, res) => res.send('Not Found'));
 
 app.use(express.static('public'))
 
-app.listen(3000, () => {
+app.listen(3002, () => {
     console.log('Listenting on the port 3002');
 });
