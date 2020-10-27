@@ -82,7 +82,6 @@ const Vendors = (vendorCollection) => {
             this.vendors.where('status', '==', status).get().then((snapshot) => {
                 const docs = [];
                 snapshot.docs.forEach(doc => {
-                    console.log('Doc Id of vendors ', doc.id);
                     docs.push(doc.data());
                 })
                 resolve(docs);
@@ -106,7 +105,6 @@ const Vendors = (vendorCollection) => {
         return new Promise((resolve, reject) => {
             // add the pending actions to the payload based on the response
             const response = this.vendors.add(payload);
-
             // check if the approval chain type is sequential
             const vendorId = payload.id;
             const activeLevel = 1;
@@ -121,7 +119,7 @@ const Vendors = (vendorCollection) => {
             } else {
                 // insert all user's pending actions into pending table
                 const allUpdates = payload.approvals[0]['users'].map(user => {
-                    return actions.addAction(user.id, vendorId, activeLevel, levelType);
+                    return actions.addAction(user.id, vendorId, activeLevel, levelType, operation);
                 });
                 Promise.all(allUpdates).then(() => {
                     resolve(response);
@@ -138,7 +136,7 @@ const Vendors = (vendorCollection) => {
                 });
             })
         });
-    } 
+    }
 
     const terminateApproval = (action) => {
         this.vendors.where('id', '==', action.vendorId).get().then(snapshot => {
@@ -162,11 +160,12 @@ const Vendors = (vendorCollection) => {
                     status: 'terminated',
                     approvals,
                 });
+                actions.cancelAllPendingActions(action.vendorId, action.activeLevel);
             });
         });
     }
 
-    const applySequenceTypeApproval = (action) => {
+    const applyUserActionApprovals = (action) => {
         this.vendors.where('id', '==', action.vendorId).get().then(snapshot => {
             let updatedActiveLevel = null;
             snapshot.docs.forEach(doc => {
@@ -207,6 +206,8 @@ const Vendors = (vendorCollection) => {
                          // IF ANYONE   
                         } else if (action.levelType === "anyOne") {
                             actions.cancelAllPendingActions(action.vendorId, updatedActiveLevel);
+                            updatedActiveLevel += 1;
+                            return {...approval, isLevelApproved: true, users: users};
                         } else {
                             // roundRobin type - all approves necessary
                             const allUsersApproved = (users.filter(user => {
@@ -214,7 +215,9 @@ const Vendors = (vendorCollection) => {
                             })).length === 0;
                             if(allUsersApproved) {
                                 updatedActiveLevel += 1;
+                                return {...approval, isLevelApproved: true, users: users};
                             }
+                            return {...approval, users: users};
                         }
                     }
                     return approval;
@@ -225,7 +228,7 @@ const Vendors = (vendorCollection) => {
                     activeLevel: updatedActiveLevel,
                 });
                 
-                if(updatedActiveLevel > action.activeLevel) {
+                if((updatedActiveLevel === action.activeLevel + 1) && (updatedActiveLevel <= approvals.length)) {
                     const updatedLevel = approvals[updatedActiveLevel - 1];
                     if (updatedLevel['type'] === "sequential") {
                         // Insert and entry into the approval actions table as pending action
@@ -234,10 +237,8 @@ const Vendors = (vendorCollection) => {
                             return true;
                         });
                     } else {
-                        console.log(updatedLevel, ' just to look');
                         // insert all user's pending actions into pending table
                         const allUpdates = updatedLevel['users'].map(user => {
-                            console.log(user.id, action.vendorId, updatedActiveLevel, updatedLevel.type, action.operation, ' ALL PARAMS ');
                             return actions.addAction(user.id, action.vendorId, updatedActiveLevel, updatedLevel.type, action.operation);
                         });
                         Promise.all(allUpdates).then(() => {
@@ -255,7 +256,7 @@ const Vendors = (vendorCollection) => {
         vendorsByStatus,
         updateActiveLevel,
         terminateApproval,
-        applySequenceTypeApproval,
+        applyUserActionApprovals,
     }
 }
 
@@ -283,7 +284,6 @@ const Actions = (actionCollection) => {
             this.actions.where('status', '==', 'pending').where('userId', '==', Number(userId)).get().then(snapshot => {
                 const docs = [];
                 snapshot.docs.forEach(doc => {
-                    console.log('Loading up the ', doc.id);
                     docs.push({action: doc.data(), id: doc.id});
                 })
                 resolve(docs);
@@ -299,13 +299,7 @@ const Actions = (actionCollection) => {
                 if (status === 'rejected') {
                     vendors.terminateApproval(action);
                 } else {
-                    // THe user has approved.. 
-                    if (action.levelType === "sequential") {
-                        vendors.applySequenceTypeApproval(action);
-                    } else {
-                        // follow the non sequential flow
-                        vendors.apply
-                    }
+                    vendors.applyUserActionApprovals(action);
                 }
                 resolve(true)
             });

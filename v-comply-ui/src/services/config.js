@@ -2,7 +2,7 @@
 const getAPIURL = () => {
   if (location.host.indexOf("localhost") > -1) {
     // it is the localhost
-    return "http://localhost:3000/api/v1/";
+    return "http://localhost:3002/api/v1/";
   } else {
     // the hosted URL here
     return location.origin + "/api/v1/";

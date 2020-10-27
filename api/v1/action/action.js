@@ -10,7 +10,6 @@ const update = (req, res) => {
 
 // fetch actions by userId
 const fetchByUser = (req, res) => {
-    console.log(req.params.user, ' AT the inter')
     actions.getPendingActionsByUser(req.params.user).then((actions) => {
         res.send(actions)
     });    

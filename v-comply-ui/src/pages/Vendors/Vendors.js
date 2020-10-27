@@ -97,7 +97,6 @@ function AddVendorForm() {
     };
 
     const getVendorId = () => {
-      console.log(vendorNameOnForm);
         return `${vendorNameOnForm.replace(/ /g, '_')}_${Date.now()}`
     }
 
@@ -124,7 +123,6 @@ function AddVendorForm() {
       queries
         .runQuery("vendors/add", "POST", payload)
         .then((result) => {
-          console.log("query ran successfully", result);
           resetSelection();
           window.location.href = "/vendors";
         })
@@ -197,7 +195,6 @@ function ViewVendors(props) {
     queries
       .runQuery(`vendors/fetch/${props.type}`, "GET")
       .then((result) => {
-        console.log(result.data, ' IN THE REEEEEEE')
         setVendors(result.data);
       })
       .catch((err) => {
@@ -206,7 +203,6 @@ function ViewVendors(props) {
   };
 
   const getApprovalLevelView = (type, levelUsers) => {
-    console.log(levelUsers);
       const levelSymbol = type === 'sequential' ? '->' : ( type === 'anyOne' ? 'or' : 'and');
     return levelUsers.map((user, idx) => {
         return <div className="user-item">
@@ -221,7 +217,6 @@ function ViewVendors(props) {
   return (
     <div className="schema-container">
       {vendors.map((vendor, index) => {
-        console.log(vendor, " IS THE VENDOR ");
         return (
           <div key={index} className="schema vendors">
             <br />

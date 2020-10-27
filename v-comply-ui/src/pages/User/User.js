@@ -71,7 +71,6 @@ const ViewUserData = (props) => {
     queries
       .runQuery(`action/fetch/${props.user.id}`, "GET")
       .then((result) => {
-        console.log(result.data);
         setActions(result.data);
       })
       .catch((err) => {
@@ -84,7 +83,6 @@ const ViewUserData = (props) => {
     queries
       .runQuery(`action/update`, "POST", {id, status, action})
       .then((result) => {
-        console.log(result.data);
         fetchPendingActions();
       })
       .catch((err) => {
@@ -96,7 +94,6 @@ const ViewUserData = (props) => {
     <div className="user-approval-list">
       {actions.length === 0 && <div className="no-approval-message">No Approvals in pending for you.</div>}
       {actions.map((action, idx) => {
-        console.log(action);
         const actionId = action.id;
         action = action.action;
         return (
