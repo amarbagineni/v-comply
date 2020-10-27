@@ -183,23 +183,38 @@ const Vendors = (vendorCollection) => {
                             //check if this was the last level 
                             return user;
                         });
-                        // check if the user is last in sequence
-                        if(approval.users[approval.users.length - 1]['id'] === action.userId) {
-                            // Yes the user was last in sequence 
-                            updatedActiveLevel += 1;
-                            return {...approval, isLevelApproved: true, users: users};
+                       
+                        // IF SEQUENCE 
+                        if (action.levelType === "sequential") {
+                            // check if the user is last in sequence
+                            if(approval.users[approval.users.length - 1]['id'] === action.userId) {
+                                // Yes the user was last in sequence 
+                                updatedActiveLevel += 1;
+                                return {...approval, isLevelApproved: true, users: users};
+                            } else {
+                                // add action for user + 1 to the pending actions
+                                let nextUserPos = null;
+                                approval.users.forEach((user, index) => {
+                                    if (user.id === action.userId) {
+                                        // the next user has to be the one to have a pending action
+                                        nextUserPos = index + 1; 
+                                    }
+                                });
+                                const nextUsersId = approval.users[nextUserPos]['id'];
+                                actions.addAction(nextUsersId, action.vendorId, updatedActiveLevel, action.levelType, action.operation);
+                                return {...approval, users: users};
+                            }
+                         // IF ANYONE   
+                        } else if (action.levelType === "anyOne") {
+                            actions.cancelAllPendingActions(action.vendorId, updatedActiveLevel);
                         } else {
-                            // add action for user + 1 to the pending actions
-                            let nextUserPos = null;
-                            approval.users.forEach((user, index) => {
-                                if (user.id === action.userId) {
-                                    // the next user has to be the one to have a pending action
-                                    nextUserPos = index + 1; 
-                                }
-                            });
-                            const nextUsersId = approval.users[nextUserPos]['id'];
-                            actions.addAction(nextUsersId, action.vendorId, updatedActiveLevel, action.levelType, action.operation);
-                            return {...approval, users: users};
+                            // roundRobin type - all approves necessary
+                            const allUsersApproved = (users.filter(user => {
+                                return !user.hasApproved;
+                            })).length === 0;
+                            if(allUsersApproved) {
+                                updatedActiveLevel += 1;
+                            }
                         }
                     }
                     return approval;
@@ -281,7 +296,6 @@ const Actions = (actionCollection) => {
             this.actions.doc(id).update({
                 status: status
             }).then(() => {
-                console.log('coming to then', status, id);
                 if (status === 'rejected') {
                     vendors.terminateApproval(action);
                 } else {
@@ -290,6 +304,7 @@ const Actions = (actionCollection) => {
                         vendors.applySequenceTypeApproval(action);
                     } else {
                         // follow the non sequential flow
+                        vendors.apply
                     }
                 }
                 resolve(true)
@@ -297,10 +312,22 @@ const Actions = (actionCollection) => {
         });
     }
 
+    const cancelAllPendingActions = (vendorId, activeLevel) => {
+        this.actions.where('vendorId', '==', vendorId).where('activeLevel', '==', activeLevel).where('status', '==', 'pending').get().then((snapshot) => {
+            const docs = [];
+            snapshot.docs.forEach(doc => {
+                this.actions.doc(doc.id).update({
+                    status: 'cancelled',
+                });
+            });
+        });
+    }
+
     return {
         addAction,
         getPendingActionsByUser,
-        setActionStatus
+        setActionStatus,
+        cancelAllPendingActions,
     }
 }
 
